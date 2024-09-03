@@ -1,0 +1,35 @@
+#!/bin/bash
+##################################################
+set -ue
+source "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/../util/init.bash"
+##################################################
+
+if [ -z "${1:-}" ]; then
+  read -r -p "Enter the hostname: " arg1
+else
+  arg1="$1"
+fi
+
+if [ -z "${2:-}" ]; then
+  read -r -p "Enter the local filepath: " arg2
+else
+  arg2="$2"
+fi
+
+if [ -z "${3:-}" ]; then
+  read -r -p "Enter the remote filepath (or press enter to skip): " arg3
+else
+  arg3="$3"
+fi
+
+REMOTE_PATH="${arg3:-$arg2}"
+"$BIN_DIR/sendfile" "$arg1" "$arg2" "${REMOTE_PATH}"
+
+mkdir temp 2>/dev/null || true
+
+
+echo "echo 'execute $REMOTE_PATH' && bash $REMOTE_PATH" > temp/run
+"$BIN_DIR/sendfile" "$arg1" "temp/run" "temp/run"
+
+# リモートサーバーでスクリプトを実行
+ssh -t "$arg1" "bash temp/run"

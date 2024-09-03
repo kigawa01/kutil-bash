@@ -1,0 +1,25 @@
+#!/bin/bash
+##################################################
+set -ue
+source "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/../util/init.bash"
+##################################################
+
+sub_dir=$KUTIL_KUTIL
+if [ -z "${1:-}" ]; then
+    echo "Error: No subcommand provided."
+    echo ">subcommands<"
+    ls "$sub_dir"
+    exit 1
+fi
+
+cmd="$sub_dir/$1"
+
+if [ ! -f "$cmd" ]; then
+    echo "Error: subcommand not found."
+    echo ">subcommands<"
+    ls "$sub_dir"
+    exit 1
+fi
+
+shift
+bash "$cmd" "$@"

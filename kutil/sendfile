@@ -1,0 +1,43 @@
+#!/bin/bash
+
+
+##################################################
+set -ue
+KUTIL_BIN_DIR=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)
+source "$KUTIL_BIN_DIR/init"
+##################################################
+# ホスト名とファイル名の存在を確認
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: $0 <hostname> <filename>"
+  exit 1
+fi
+
+hostname="$1"
+filename="$2"
+remote_path="${3:-$filename}"
+
+# ファイルの存在を確認
+if [ ! -f "$filename" ]; then
+  echo "File $filename does not exist."
+  exit 1
+fi
+
+echo "create temp dir"
+mkdir -p temp 2>/dev/null || true
+ssh "$hostname" "mkdir temp 2>/dev/null || true"
+
+echo "create parent dir"
+file_dir=$(dirname "$filename")
+echo "mkdir -p $file_dir 2>/dev/null || true" > temp/create_dir
+scp "temp/create_dir" "$hostname":"temp/create_dir"
+ssh "$hostname" "bash temp/create_dir"
+
+
+# リモートにファイルをコピーする
+echo "send file"
+if scp "$filename" "$hostname":"$remote_path"; then
+  echo "File $filename copied successfully to $hostname:$remote_path"
+else
+  echo "Failed to copy file $filename to $hostname:$remote_path"
+  exit 1
+fi

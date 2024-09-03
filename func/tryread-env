@@ -1,0 +1,21 @@
+#!/bin/bash
+
+function tryread-env() {
+
+  var="$1"
+  file="${2:-"./.env"}"
+  msg="${3:-"Enter"}"
+  # shellcheck disable=SC2116
+  unset "$var"
+  sourceif "$file"
+
+  if [ "$(eval "echo \"\$$var\"")" == "" ]; then
+    if [ -z "${PRE_URL:-}" ]; then
+      read -r -p "$msg: " PRE_URL
+    fi
+
+    set "$var=$PRE_URL"
+    echo "$var=$PRE_URL" >> "$file"
+  fi
+}
+
