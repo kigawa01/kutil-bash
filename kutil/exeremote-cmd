@@ -1,0 +1,16 @@
+#!/bin/bash
+##################################################
+set -e
+source "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/../util/init.bash"
+##################################################
+
+if [ -z "${1:-}" ]; then
+  read -r -p "Enter the hostname: " arg1
+else
+  arg1="$1"
+fi
+shift
+
+mkdir -p temp 2>/dev/null || true
+printf " %s" "${@}" > temp/exeremote-cmd_cmd_temp
+"$KUTIL_KUTIL/exeremote-file" "$arg1" temp/exeremote-cmd_cmd_temp temp/exeremote-cmd_cmd_temp

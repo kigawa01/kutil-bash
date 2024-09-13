@@ -1,6 +1,6 @@
 #!/bin/bash
 ##################################################
-set -ue
+set -e
 source "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/../util/init.bash"
 ##################################################
 
@@ -23,13 +23,13 @@ else
 fi
 
 REMOTE_PATH="${arg3:-$arg2}"
-"$BIN_DIR/sendfile" "$arg1" "$arg2" "${REMOTE_PATH}"
+"$KUTIL_KUTIL/sendfile" "$arg1" "$arg2" "${REMOTE_PATH}"
 
 mkdir temp 2>/dev/null || true
 
 
 echo "echo 'execute $REMOTE_PATH' && bash $REMOTE_PATH" > temp/run
-"$BIN_DIR/sendfile" "$arg1" "temp/run" "temp/run"
+"$KUTIL_KUTIL/sendfile" "$arg1" "temp/run" "temp/run"
 
 # リモートサーバーでスクリプトを実行
 ssh -t "$arg1" "bash temp/run"

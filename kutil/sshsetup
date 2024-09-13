@@ -1,0 +1,22 @@
+##!/bin/bash
+###################################################
+#set -ue
+#source "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/../util/init.bash"
+###################################################
+#
+#bash "$KURTIL_DIR/mkdirif" "$KUTIL_BASH_DIR/config"
+#
+#(mkdir ./.ssh || true) &&
+#echo ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICaU5jalC1sPYcllYrw2DH7ME/P/RtI4VBJEJCEHbWND kigaw@kigawa-main >> ./.ssh/authorized_keys
+#
+#unset URL
+#kutil sourceif ./.env
+#if [ -z "${URL:-}" ]; then
+#
+#  if [ -z "${PRE_URL:-}" ]; then
+#    read -r -p "Enter the url: " PRE_URL
+#  fi
+#
+#  URL=$PRE_URL
+#  echo "URL=$PRE_URL" >> ./.env
+#fi

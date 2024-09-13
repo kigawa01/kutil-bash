@@ -2,19 +2,45 @@
 
 
 ##################################################
-set -ue
+set -e
 KUTIL_BIN_DIR=$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)
-source "$KUTIL_BIN_DIR/init"
+
+source "$KUTIL_BIN_DIR/../util/init.bash"
 ##################################################
 # ホスト名とファイル名の存在を確認
-if [ -z "$1" ] || [ -z "$2" ]; then
-  echo "Usage: $0 <hostname> <filename>"
+sudo_mode="false"
+if [ -n "${1:-}" ]; then
+    first_char="${1:0:1}"
+    if [ "${first_char}" == "-" ]; then
+      rest_str="${1:1}"
+      shift
+      while true; do
+          if [ "${rest_str:0:1}" == "" ]; then
+              break
+          fi
+        if [ "${rest_str:0:1}" == "s" ]; then
+          echo sudo mode
+           sudo_mode="true"
+        fi
+        rest_str="${rest_str:1}"
+      done
+    fi
+fi
+
+if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
+  echo "Usage: kutil sendfile <optional:option> <hostname> <filename> <optional:remote path>"
+  echo options
+  echo "-s copy as root"
   exit 1
 fi
+
+echo "cmd $0 $1 $2 $3"
 
 hostname="$1"
 filename="$2"
 remote_path="${3:-$filename}"
+
+echo remote_path "$remote_path"
 
 # ファイルの存在を確認
 if [ ! -f "$filename" ]; then
@@ -27,17 +53,34 @@ mkdir -p temp 2>/dev/null || true
 ssh "$hostname" "mkdir temp 2>/dev/null || true"
 
 echo "create parent dir"
-file_dir=$(dirname "$filename")
-echo "mkdir -p $file_dir 2>/dev/null || true" > temp/create_dir
-scp "temp/create_dir" "$hostname":"temp/create_dir"
-ssh "$hostname" "bash temp/create_dir"
+file_dir=$(dirname "$remote_path")
+
+echo "if [ ! -d $file_dir ]; then mkdir -p \"$file_dir\"; fi" > temp/sendfile-create_dir
+scp "temp/sendfile-create_dir" "$hostname":"temp/sendfile-create_dir"
+if [ "$sudo_mode" == "false" ]; then
+  ssh -t "$hostname" "bash temp/sendfile-create_dir"
+else
+  ssh -t "$hostname" "sudo bash temp/sendfile-create_dir"
+fi
 
 
 # リモートにファイルをコピーする
 echo "send file"
-if scp "$filename" "$hostname":"$remote_path"; then
-  echo "File $filename copied successfully to $hostname:$remote_path"
+if [ "$sudo_mode" == "false" ]; then
+  if scp "$filename" "$hostname":"$remote_path"; then
+    echo "File $filename copied successfully to $hostname:$remote_path"
+  else
+    echo "Failed to copy file $filename to $hostname:$remote_path"
+    exit 1
+  fi
 else
-  echo "Failed to copy file $filename to $hostname:$remote_path"
-  exit 1
+  if scp "$filename" "$hostname":"temp/sendfile-temp_file"; then
+    echo "sudo mv -f temp/sendfile-temp_file $remote_path" > temp/sendfile-create_dir
+    scp "temp/sendfile-create_dir" "$hostname":"temp/sendfile-create_dir"
+    ssh -t "$hostname" "bash temp/sendfile-create_dir"
+    echo "File $filename copied successfully to $hostname:$remote_path"
+  else
+    echo "Failed to copy file $filename to $hostname:$remote_path"
+    exit 1
+  fi
 fi
