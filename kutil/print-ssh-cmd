@@ -1,0 +1,7 @@
+#!/bin/bash
+##################################################
+set -ue
+source "$(cd "$(dirname "${BASH_SOURCE:-$0}")"; pwd)/../util/init.bash"
+##################################################
+key=$(cat "${KUTIL_SSH_KEY}")
+echo -e "\necho \"$key\" >> ~/.ssh/authorized_keys\n"
